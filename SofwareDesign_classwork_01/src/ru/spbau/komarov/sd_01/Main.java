@@ -8,8 +8,8 @@ public class Main {
                 .addCommand("exit", new ExitCommand())
                 .addCommand("pwd", new PwdCommand())
                 .addCommand("wc", new WcCommand())
-                .addCommand("cliGrep", new Grep(new GrepOptionsParserCli()))
-                .addCommand("jGrep", new Grep(new GrepOptionsParserJCommander()))
+                .addCommand("cliGrep", new GrepCommand(new GrepOptionsParserCli()))
+                .addCommand("jGrep", new GrepCommand(new GrepOptionsParserJCommander()))
                 .build().start();
     }
 }

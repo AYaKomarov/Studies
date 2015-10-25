@@ -1,5 +1,6 @@
 package ru.spbau.komarov.sd_01;
 
+import org.apache.commons.cli.ParseException;
 import ru.spbau.komarov.sd_01.commands.Command;
 
 import java.io.*;
@@ -20,15 +21,12 @@ public class Shell {
 
     public void start() {
         try(BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-
             while(true) {
                 System.out.print(">>> ");
                 executeLineWithPipes(br.readLine());
             }
-
         } catch (IOException e) {
             System.err.print(e.getMessage());
-            return;
         }
     }
 
@@ -70,7 +68,13 @@ public class Shell {
         for(int i=0; i < args.length; i++)
             args[i] = words[i+1];
 
-        command.execute(args, in, out);
+        try {
+            command.execute(args, in, out);
+        } catch (FileNotFoundException e) {
+            System.out.println("No such file or directory");
+        } catch (IOException | ParseException e) {
+            System.err.print(e.getMessage());
+        }
     }
 
     public class Builder {

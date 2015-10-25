@@ -5,7 +5,7 @@ import org.apache.commons.cli.*;
 public class GrepOptionsParserCli implements GrepOptionsParser{
 
     @Override
-    public Grep.GrepParameters getParameters(String[] args) throws ParseException {
+    public GrepCommand.GrepParameters getParameters(String[] args) throws ParseException {
         Options options = new Options();
         options.addOption("i", false, "Ignore case");
         options.addOption("w", false, "Word regexp");
@@ -28,7 +28,7 @@ public class GrepOptionsParserCli implements GrepOptionsParser{
             cA = Integer.parseInt(cmd.getOptionValue("A"));
         }
 
-        Grep.GrepParameters gps = new Grep.GrepParameters();
+        GrepCommand.GrepParameters gps = new GrepCommand.GrepParameters();
         gps.setParameters(i, w, A, cA);
         return gps;
     }

@@ -5,11 +5,9 @@ import java.io.PrintStream;
 
 public class PwdCommand implements Command {
 
-    private String info = "Print name of current/working directory";
-
     @Override
     public String getInfo() {
-        return info;
+        return "Print name of current/working directory";
     }
 
     @Override

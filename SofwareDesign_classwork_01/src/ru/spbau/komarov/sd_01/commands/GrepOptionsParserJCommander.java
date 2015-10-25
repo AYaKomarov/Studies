@@ -4,12 +4,10 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.apache.commons.cli.ParseException;
 
-import java.util.Arrays;
-
 public class GrepOptionsParserJCommander implements GrepOptionsParser {
 
     @Override
-    public Grep.GrepParameters getParameters(String[] options) throws ParseException {
+    public GrepCommand.GrepParameters getParameters(String[] options) throws ParseException {
         JArgs jct = new JArgs();
         new JCommander(jct, options);
 
@@ -19,7 +17,7 @@ public class GrepOptionsParserJCommander implements GrepOptionsParser {
         int cA = jct.countLinesAfterContext;
         boolean A = cA != -1;
 
-        Grep.GrepParameters gps = new Grep.GrepParameters();
+        GrepCommand.GrepParameters gps = new GrepCommand.GrepParameters();
         gps.setParameters(i,w,A,cA);
         return gps;
     }

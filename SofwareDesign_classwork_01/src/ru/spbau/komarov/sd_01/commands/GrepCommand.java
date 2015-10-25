@@ -3,81 +3,66 @@ package ru.spbau.komarov.sd_01.commands;
 import org.apache.commons.cli.ParseException;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Pattern;
 
-public class Grep implements Command {
+public class GrepCommand implements Command {
 
     GrepOptionsParser grepOptionsParser;
 
-    public Grep(GrepOptionsParser grepOptionsParser) {
+    public GrepCommand(GrepOptionsParser grepOptionsParser) {
         this.grepOptionsParser = grepOptionsParser;
     }
 
     @Override
-    public void execute(String[] args, InputStream in, PrintStream out) {
+    public String getInfo() {
+        return "grep - print lines matching a pattern";
+    }
+
+    @Override
+    public void execute(String[] args, InputStream in, PrintStream out) throws ParseException, IOException {
 
         if(in == null && args.length < 2 || args.length == 0) {
             System.out.println("Too few arguments for grep");
             return;
         }
+        String filename = in == null ? args[args.length-1] : null;
 
-        String query = in == null ? args[args.length-2] : args[args.length-1];
+        final String query = in == null ? args[args.length-2] : args[args.length-1];
 
-        GrepParameters grepParameters = null;
-        try {
-            String[] options = in == null ? Arrays.copyOfRange(args, 0, args.length - 2) :
-                    Arrays.copyOfRange(args, 0, args.length - 1);
-            grepParameters = grepOptionsParser.getParameters(options);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return;
-        }
+        String[] options = in == null ? Arrays.copyOfRange(args, 0, args.length - 2) :
+                Arrays.copyOfRange(args, 0, args.length - 1);
+        final GrepParameters grepParameters = grepOptionsParser.getParameters(options);
 
-        List<String> resultsLines = new ArrayList<>();
-        int lines = 0;
+        LineReaderWithHandler lineReaderWithHandler =
+                new LineReaderWithHandler(in, filename, new LineReaderWithHandler.LineHandler() {
+                    private int lines = 0;
 
-        try {
-            try (BufferedReader reader = new BufferedReader(in == null ?
-                    new FileReader(args[args.length-1]) :
-                    new InputStreamReader(in, "UTF-8"))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if(lines > 0) {
-                        resultsLines.add(line);
-                        lines--;
-                    }
-
-                    Pattern pattern;
-                    if (grepParameters.isIgnoreCase()) {
-                        pattern = Pattern.compile(query, Pattern.CASE_INSENSITIVE);
-                    } else {
-                        pattern = Pattern.compile(query);
-                    }
-
-                    if( (!grepParameters.isWordRegexp() && pattern.matcher(line).find()) ||
-                            (grepParameters.isWordRegexp() && findWord(pattern, line, grepParameters))) {
-                        if(grepParameters.isAfterContext()) {
-                            lines = grepParameters.getCountLinesAfterContext();
+                    @Override
+                    public void hadleLine(String line) {
+                        if(lines > 0) {
+                            out.print(line + "\n");
+                            lines--;
+                        }
+                        Pattern pattern;
+                        if (grepParameters.isIgnoreCase()) {
+                            pattern = Pattern.compile(query, Pattern.CASE_INSENSITIVE);
                         } else {
-                            resultsLines.add(line);
+                            pattern = Pattern.compile(query);
+                        }
+
+                        if( (!grepParameters.isWordRegexp() && pattern.matcher(line).find()) ||
+                                (grepParameters.isWordRegexp() && findWord(pattern, line, grepParameters))) {
+                            if(grepParameters.isAfterContext()) {
+                                lines = grepParameters.getCountLinesAfterContext();
+                            } else {
+                                out.print(line + "\n");
+                            }
                         }
                     }
+                });
 
-                }
-            } catch (FileNotFoundException e) {
-                System.out.println("No such file or directory");
-            }
-        } catch (IOException e) {
-            System.err.print(e.getMessage());
-            return;
-        }
-
-        for(String line : resultsLines) {
-            out.println(line);
-        }
+        lineReaderWithHandler.readAndHandleLines();
     }
 
 
@@ -102,12 +87,6 @@ public class Grep implements Command {
             }
         }
         return false;
-    }
-
-
-    @Override
-    public String getInfo() {
-        return "grep - print lines matching a pattern";
     }
 
     public static class GrepParameters {

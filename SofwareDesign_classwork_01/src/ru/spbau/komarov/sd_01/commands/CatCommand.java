@@ -4,41 +4,23 @@ import java.io.*;
 
 public class CatCommand implements Command {
 
-    private String info = "Print file on the standard output";
-
     @Override
     public String getInfo() {
-        return info;
+        return "Print file on the standard output";
     }
 
     @Override
-    public void execute(String[] args, InputStream in, PrintStream out) {
+    public void execute(String[] args, InputStream in, PrintStream out) throws IOException {
 
-        if(in == null && args.length == 0) {
+        if (in == null && args.length == 0) {
             System.out.println("Too few arguments");
             return;
         }
+        String filename = in == null ? args[0] : null;
 
-        try {
-            try (BufferedReader reader = new BufferedReader(in == null ?
-                    new FileReader(args[0]) :
-                    new InputStreamReader(in, "UTF-8"))) {
+        LineReaderWithHandler lineReaderWithHandler =
+                new LineReaderWithHandler(in, filename, line -> out.print(line + "\n"));
 
-                StringBuilder stringBuilder = new StringBuilder();
-                String ls = System.getProperty("line.separator");
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append( line );
-                    stringBuilder.append( ls );
-                }
-                out.print(stringBuilder.toString());
-
-            } catch (FileNotFoundException e) {
-                System.out.println("No such file or directory");
-            }
-        } catch (IOException e) {
-            System.err.print(e.getMessage());
-            return;
-        }
+        lineReaderWithHandler.readAndHandleLines();
     }
 }
