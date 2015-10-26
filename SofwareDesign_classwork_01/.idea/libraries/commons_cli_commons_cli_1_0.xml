@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="commons-cli:commons-cli:1.0" type="repository">
+    <properties maven-id="commons-cli:commons-cli:1.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/commons-cli/commons-cli/1.0/commons-cli-1.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-logging/commons-logging/1.0/commons-logging-1.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/1.0/commons-lang-1.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/junit/junit/3.7/junit-3.7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
