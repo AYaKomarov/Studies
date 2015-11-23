@@ -33,7 +33,7 @@ public class WcCommand implements Command {
         private int words = 0;
 
         @Override
-        public void hadleLine(String line) {
+        public void handleLine(String line) {
             lines++;
             bytes += line.getBytes().length;
             words += line.split("\\s+").length;

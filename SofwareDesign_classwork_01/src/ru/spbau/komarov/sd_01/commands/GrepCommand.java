@@ -26,33 +26,35 @@ public class GrepCommand implements Command {
             System.out.println("Too few arguments for grep");
             return;
         }
-        String filename = in == null ? args[args.length-1] : null;
 
-        final String query = in == null ? args[args.length-2] : args[args.length-1];
+        LineReaderWithHandler lineReaderWithHandler = createGrepLineReader(args, in, out);
+        lineReaderWithHandler.readAndHandleLines();
+    }
 
-        String[] options = in == null ? Arrays.copyOfRange(args, 0, args.length - 2) :
+    private LineReaderWithHandler createGrepLineReader(String[] args, InputStream in, PrintStream out) throws ParseException {
+        boolean readFromFile = in == null;
+
+        String filename = readFromFile ? args[args.length-1] : null;
+        String[] options = readFromFile ? Arrays.copyOfRange(args, 0, args.length - 2) :
                 Arrays.copyOfRange(args, 0, args.length - 1);
+        final String query = readFromFile ? args[args.length-2] : args[args.length-1];
         final GrepParameters grepParameters = grepOptionsParser.getParameters(options);
 
-        LineReaderWithHandler lineReaderWithHandler =
-                new LineReaderWithHandler(in, filename, new LineReaderWithHandler.LineHandler() {
+        return new LineReaderWithHandler(in, filename, new LineReaderWithHandler.LineHandler() {
                     private int lines = 0;
 
                     @Override
-                    public void hadleLine(String line) {
+                    public void handleLine(String line) {
                         if(lines > 0) {
                             out.print(line + "\n");
                             lines--;
                         }
-                        Pattern pattern;
-                        if (grepParameters.isIgnoreCase()) {
-                            pattern = Pattern.compile(query, Pattern.CASE_INSENSITIVE);
-                        } else {
-                            pattern = Pattern.compile(query);
-                        }
 
-                        if( (!grepParameters.isWordRegexp() && pattern.matcher(line).find()) ||
-                                (grepParameters.isWordRegexp() && findWord(pattern, line, grepParameters))) {
+                        Pattern pattern = grepParameters.isIgnoreCase() ?
+                                Pattern.compile(query, Pattern.CASE_INSENSITIVE) : Pattern.compile(query);
+
+                        if( grepParameters.isWordRegexp() ?
+                                findWord(pattern, line, grepParameters) : pattern.matcher(line).find()) {
                             if(grepParameters.isAfterContext()) {
                                 lines = grepParameters.getCountLinesAfterContext();
                             } else {
@@ -61,11 +63,7 @@ public class GrepCommand implements Command {
                         }
                     }
                 });
-
-        lineReaderWithHandler.readAndHandleLines();
     }
-
-
     private boolean findWord(Pattern pattern, String line, GrepParameters grepParameters) {
         String patternString = pattern.pattern();
         boolean startLine = patternString.charAt(0) == '^';
@@ -74,14 +72,14 @@ public class GrepCommand implements Command {
         patternString = endLine ? patternString.substring(0,patternString.length()-2) : patternString;
 
         String[] words = line.split("\\s+");
-        for(int i=0; i < words.length; i++) {
-            boolean find = grepParameters.ignoreCase ? patternString.equalsIgnoreCase(words[i]) :
-                    patternString.equals(words[i]);
+        for (String word : words) {
+            boolean find = grepParameters.ignoreCase ? patternString.equalsIgnoreCase(word) :
+                    patternString.equals(word);
             if (find) {
-                if (    (!startLine && !endLine) ||
-                        (startLine && !endLine && line.startsWith(words[i])) ||
-                        (!startLine && endLine && line.endsWith(words[i])) ||
-                        (startLine && endLine && line.startsWith(words[i]) && line.endsWith(words[i]))) {
+                if ((!startLine && !endLine) ||
+                        (startLine && !endLine && line.startsWith(word)) ||
+                        (!startLine && endLine && line.endsWith(word)) ||
+                        (startLine && endLine && line.startsWith(word) && line.endsWith(word))) {
                     return true;
                 }
             }
